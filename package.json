@@ -1,9 +1,0 @@
-{
-  "name": "DMRBridgeWAV",
-  "version": "1.0.0",
-  "description": "Send predefined audio files on a DMR Network using MQTT",
-  "main": "src/index.js",
-  "repository": "git@github.com:jess-sys/DMRBridgeWAV.git",
-  "author": "Jessy SOBREIRO <jessy.sobreiro@gmail.com>",
-  "license": "GPLv2"
-}
