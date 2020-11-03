@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+"""DMRBridgeWAV: Push WAV audio files into a DMR Network"""
+
+__author__ = "Jessy SOBREIRO"
+__copyright__ = "Copyright 2020, Jessy SOBREIRO"
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Jessy SOBREIRO"
+__email__ = "jessy.sobreiro@gmail.com"
+__status__ = "Production"
+
 import argparse as ap
 import socket
 import struct
