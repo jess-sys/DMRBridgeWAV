@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+
+import argparse as ap
+import socket
+import struct
+import sys
+import pydub
+import time
+
+chunk_size = 320
+ip_address = "172.30.42.120"
+
+parser = ap.ArgumentParser(description="USRP to DMR")
+parser.add_argument("-i", "--input", help="input file")
+parser.add_argument("-s", "--stdout", help="print raw audio", action="store_true")
+parser.add_argument("-v", "--verbose", help="print file details", action="store_true")
+args = parser.parse_args()
+
+
+def txAudioStream():
+    if args.input is not None:
+        stream_file = pydub.AudioSegment.from_file(args.input, "raw", frame_rate=8000, channels=1, sample_width=2)
+    else:
+        print('Missing input file, exiting')
+        sys.exit(0)
+
+    raw_audio = stream_file.raw_data
+    audio_length = len(raw_audio)
+
+    if args.verbose:
+        print('Total size (in Bytes)    : ') + str(audio_length)
+        print('Sampling rate (in Hz)    : ') + str(8000)
+        print('Chunk size (in frames)   : ') + str(160)
+        print('Duration   (in seconds)  : ') + str(stream_file.duration_seconds)
+        print('Frame size (in Bytes)    : ') + str(stream_file.frame_width)
+
+    udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    if args.verbose:
+        print ('TX: START')
+
+    for seq, slice in enumerate(range(0, audio_length, chunk_size)):
+        buf = raw_audio[slice:slice+chunk_size].ljust(chunk_size, b"\0")
+        if args.stdout:
+            sys.stdout.buffer.write(buf)
+        usrp = b'USRP' + struct.pack('>iiiiiii', seq, 0, True, 0, 0, 0, 0) + buf
+        udp.sendto(usrp, (ip_address, 34001))
+        time.sleep(0.02)
+
+    usrp = b'USRP' + struct.pack('>iiiiiii', seq + 1, 0, False, 0, 0, 0, 0)
+    udp.sendto(usrp, (ip_address, 34001))
+    
+    if args.verbose:
+        print('TX: END')
+
+
+txAudioStream()

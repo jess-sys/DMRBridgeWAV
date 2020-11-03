@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+
+import matplotlib.pyplot as plt
+import argparse as ap
+import numpy as np
+import soundfile
+import wave
+import sys
+
+parser = ap.ArgumentParser(description="USRP to DMR")
+parser.add_argument("-s", "--source")
+parser.add_argument("-d", "--destination")
+args = parser.parse_args()
+
+if args.source is not None and args.destination is not None:
+    data_d, samplerate_d = soundfile.read(args.destination)
+    soundfile.write(args.destination, data_d, samplerate_d)
+    wav_file_source = wave.open(args.source,'r')
+    wav_file_dest = wave.open(args.destination,'r')
+else:
+    print('Please specify both files')
+    sys.exit(0)
+
+signal_s = wav_file_source.readframes(-1)
+signal_d = wav_file_dest.readframes(-1)
+
+if wav_file_source.getsampwidth() == 1:
+    signal_s = np.array(np.frombuffer(signal_s, dtype='UInt8')-128, dtype='Int8')
+elif wav_file_source.getsampwidth() == 2:
+    signal_s = np.frombuffer(signal_s, dtype='Int16')
+else:
+    raise RuntimeError("Unsupported sample width")
+
+if wav_file_dest.getsampwidth() == 1:
+    signal_d = np.array(np.frombuffer(signal_d, dtype='UInt8')-128, dtype='Int8')
+elif wav_file_dest.getsampwidth() == 2:
+    signal_d = np.frombuffer(signal_d, dtype='Int16')
+else:
+    raise RuntimeError("Unsupported sample width")
+
+deinterleaved_s = [signal_s[idx::wav_file_source.getnchannels()] for idx in range(wav_file_source.getnchannels())]
+deinterleaved_d = [signal_d[idx::wav_file_dest.getnchannels()] for idx in range(wav_file_dest.getnchannels())]
+
+fs_s = wav_file_source.getframerate()
+fs_d = wav_file_dest.getframerate()
+
+Time_s=np.linspace(0, len(signal_s)//wav_file_source.getnchannels()//fs_s, num=len(signal_s)//wav_file_source.getnchannels())
+Time_d=np.linspace(0, len(signal_d)//wav_file_dest.getnchannels()//fs_d, num=len(signal_d)//wav_file_dest.getnchannels())
+
+plt.figure(figsize=(50,6))
+plt.figure(1)
+
+plt.subplot(211)
+for channel in deinterleaved_s:
+    plt.plot(Time_s, channel, linewidth=.125)
+    plt.title('Source WAV Waveform')
+
+plt.subplot(212)
+for channel in deinterleaved_d:
+    plt.plot(Time_d, channel, linewidth=.125)
+    plt.title('Destination WAV Waveform')
+
+
+plt.show()
+#plt.savefig('investigation/test.png', dpi=100)

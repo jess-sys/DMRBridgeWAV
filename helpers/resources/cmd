@@ -1,0 +1,1 @@
+ffmpeg -i in.wav -ar 8000 -ac 1 -acodec pcm_s16le out.wav
