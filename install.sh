@@ -17,3 +17,6 @@ fi
 ## Prepare a clean directory in /opt with needed files
 mkdir /opt/DMRBridgeWAV
 cp . /opt/DMRBridgeWAV -R
+
+cd /opt/DMRBridgeWAV
+pip3 install -r requirements.txt
